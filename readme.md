@@ -6,21 +6,13 @@
 
 ## 📸 截图
 
-> 👇 替换为实际截图
-
-```
-<!-- 书架主页 -->
 ![书架主页](screenshots/shelf.png)
 
-<!-- 双语阅读 -->
 ![双语阅读](screenshots/reader.png)
 
-<!-- 笔记标注 -->
 ![笔记标注](screenshots/annotations.png)
 
-<!-- 设置面板 -->
 ![API 设置](screenshots/settings.png)
-```
 
 ---
 
