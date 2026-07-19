@@ -1,0 +1,8 @@
+node_modules/
+data/
+dist/
+.DS_Store
+*.log
+book source/
+.claude/
+*.epub

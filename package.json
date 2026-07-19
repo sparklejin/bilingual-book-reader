@@ -1,0 +1,20 @@
+{
+  "name": "bilingual-book-reader",
+  "version": "1.0.0",
+  "description": "英文电子书双语辅助阅读桌面应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "cheerio": "^1.0.0",
+    "sql.js": "^1.10.0"
+  }
+}

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>Bilingual Book Reader</title>
+  <link rel="stylesheet" href="styles/reader.css">
+</head>
+<body>
+
+  <!-- ====== 顶部工具栏 ====== -->
+  <header class="toolbar">
+    <h1 class="app-title">📖 双语阅读器</h1>
+    <div class="toolbar-actions">
+      <button id="btnBackToShelf" class="btn btn-nav" style="display:none;">📚 书架</button>
+      <span class="toolbar-sep reader-only" style="display:none;"></span>
+      <button id="btnFontDown" class="btn btn-icon reader-only" title="缩小字体" style="display:none;">A⁻</button>
+      <button id="btnFontUp" class="btn btn-icon reader-only" title="放大字体" style="display:none;">A⁺</button>
+      <button id="btnToggleSearch" class="btn btn-icon reader-only" title="搜索 (Ctrl+F)" style="display:none;">🔍</button>
+      <button id="btnSettings" class="btn btn-icon" title="API 设置">⚙️</button>
+      <span id="bookTitle" class="book-title-display"></span>
+    </div>
+    <!-- 搜索栏 -->
+    <div id="searchBar" class="search-bar" style="display:none;">
+      <input id="searchInput" type="text" class="search-input" placeholder="搜索...">
+      <span id="searchInfo" class="search-info"></span>
+      <button id="btnSearchPrev" class="btn btn-icon btn-sm" title="上一个">↑</button>
+      <button id="btnSearchNext" class="btn btn-icon btn-sm" title="下一个">↓</button>
+      <button id="btnSearchClose" class="btn btn-icon btn-sm" title="关闭">✕</button>
+    </div>
+  </header>
+
+  <!-- ====== 状态栏：统计信息 ====== -->
+  <div id="statsBar" class="stats-bar" style="display: none;">
+    <span id="statsText"></span>
+  </div>
+
+  <!-- ====== 章节导航 ====== -->
+  <nav id="chapterNav" class="chapter-nav" style="display: none;">
+    <label for="chapterSelect">章节：</label>
+    <select id="chapterSelect"></select>
+    <span id="chapterInfo"></span>
+    <button id="btnTranslate" class="btn btn-primary btn-sm">🌐 翻译本章</button>
+    <button id="btnTranslateAll" class="btn btn-secondary btn-sm">📖 翻译全书</button>
+    <button id="btnStopTranslate" class="btn btn-danger btn-sm" style="display:none;">⏹ 停止翻译</button>
+  </nav>
+
+  <!-- ====== 视图1: 书架主页 ====== -->
+  <main class="shelf-container" id="shelfView">
+    <div class="shelf-grid" id="shelfGrid">
+      <!-- 图书卡片 + 添加按钮动态渲染 -->
+    </div>
+    <div id="shelfLoading" class="loading-state" style="display: none;">
+      <div class="spinner"></div>
+      <p>正在解析电子书...</p>
+    </div>
+  </main>
+
+  <!-- ====== 视图2: 阅读器 ====== -->
+  <main class="reader-container" id="readerView" style="display: none;">
+    <div id="paragraphsArea"></div>
+
+    <nav id="pageNav" class="page-nav" style="display: none;">
+      <button id="btnPrevChapter" class="btn btn-nav">← 上一章</button>
+      <span id="pageNavInfo" class="page-nav-info"></span>
+      <button id="btnNextChapter" class="btn btn-nav">下一章 →</button>
+    </nav>
+  </main>
+
+  <!-- ====== 评论弹出卡片 ====== -->
+  <div id="commentPopover" class="comment-popover" style="display:none;">
+    <div class="comment-popover-arrow"></div>
+    <div class="comment-popover-text" id="commentPopoverText"></div>
+    <button class="comment-popover-close" id="btnClosePopover">✕</button>
+  </div>
+
+  <!-- ====== 选择文本浮动工具栏 ====== -->
+  <div id="annotationToolbar" class="annotation-toolbar" style="display:none;">
+    <button data-type="highlight" title="高亮">🖍</button>
+    <button data-type="underline" title="波浪线">〰</button>
+    <button data-type="bold" title="加粗"><b>B</b></button>
+    <button data-type="comment" title="评论">💬</button>
+  </div>
+
+  <!-- ====== 评论编辑弹窗 ====== -->
+  <div id="commentModal" class="modal-overlay" style="display:none;">
+    <div class="modal-panel" style="width:420px;">
+      <div class="modal-header">
+        <h2>💬 添加评论</h2>
+        <button id="btnCloseCommentModal" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="comment-quote" id="commentQuote"></div>
+        <label class="field-label">评论内容</label>
+        <textarea id="commentTextarea" class="comment-textarea" rows="4" placeholder="写下你的想法..."></textarea>
+        <div class="modal-actions">
+          <button id="btnCancelComment" class="btn btn-secondary">取消</button>
+          <button id="btnSaveComment" class="btn btn-primary">💾 保存评论</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 右键菜单 ====== -->
+  <div id="contextMenu" class="context-menu" style="display:none;"></div>
+
+  <!-- ====== 笔记面板 ====== -->
+  <div id="notesOverlay" class="notes-overlay" style="display:none;"></div>
+  <div id="notesPanel" class="notes-panel" style="display:none;">
+    <div class="notes-panel-header">
+      <h2>📝 笔记</h2>
+      <button id="btnCloseNotes" class="btn-close">✕</button>
+    </div>
+    <div class="notes-panel-body" id="notesPanelBody"></div>
+  </div>
+
+
+  <!-- ====== API 设置弹窗 ====== -->
+  <div id="settingsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h2>⚙️ API 设置</h2>
+        <button id="btnCloseSettings" class="btn-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">支持所有兼容 OpenAI Chat Completions 格式的 API</p>
+
+        <label class="field-label">API 地址 (Base URL)</label>
+        <input id="inputApiUrl" type="text" class="field-input"
+               placeholder="https://api.openai.com">
+
+        <label class="field-label">API 密钥 (Key)</label>
+        <input id="inputApiKey" type="password" class="field-input"
+               placeholder="sk-...">
+
+        <label class="field-label">模型名称</label>
+        <select id="inputModelName" class="field-input">
+          <optgroup label="💰 DeepSeek（翻译推荐）">
+            <option value="deepseek-chat">deepseek-chat (V3 · Flash · ¥1/1M tokens)</option>
+          </optgroup>
+          <optgroup label="🔬 OpenAI">
+            <option value="gpt-4o-mini">gpt-4o-mini (Flash · 便宜)</option>
+            <option value="gpt-4o">gpt-4o (Pro · 贵但质量高)</option>
+          </optgroup>
+          <optgroup label="🔬 通义千问">
+            <option value="qwen-turbo">qwen-turbo (Flash · 便宜)</option>
+            <option value="qwen-plus">qwen-plus (Pro · 平衡)</option>
+          </optgroup>
+          <optgroup label="🔬 智谱 GLM">
+            <option value="glm-4-flash">glm-4-flash (Flash · 免费额度)</option>
+            <option value="glm-4">glm-4 (Pro)</option>
+          </optgroup>
+          <optgroup label="📝 自定义">
+            <option value="__custom__">其他模型（手动输入）...</option>
+          </optgroup>
+        </select>
+        <input id="inputModelNameCustom" type="text" class="field-input"
+               placeholder="输入自定义模型名" style="display:none; margin-top:0.3rem;">
+
+        <div class="field-presets">
+          <span class="preset-label">快速填充：</span>
+          <button class="btn btn-sm preset-btn" data-preset="openai">OpenAI</button>
+          <button class="btn btn-sm preset-btn" data-preset="deepseek">DeepSeek</button>
+          <button class="btn btn-sm preset-btn" data-preset="qwen">通义千问</button>
+          <button class="btn btn-sm preset-btn" data-preset="glm">智谱</button>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btnTestApi" class="btn btn-secondary">🔗 测试连接</button>
+          <button id="btnSaveSettings" class="btn btn-primary">💾 保存设置</button>
+        </div>
+        <p id="settingsMsg" class="settings-msg"></p>
+
+        <div class="usage-section">
+          <h3 class="usage-title">📊 API Token 用量统计</h3>
+          <div id="usageStats" class="usage-stats">
+            <p class="usage-empty">暂无统计数据（翻译后自动记录）</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/reader.js"></script>
+</body>
+</html>
